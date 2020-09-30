@@ -1,0 +1,23 @@
+<html>
+ <head>
+ </head>
+ <body>
+  <script src="https://www.puck-js.com/puck.js"></script>
+ 
+ <script>
+  function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+  } else { 
+    console.log("Geolocation is not supported by this browser.");
+  }
+}
+
+function showPosition(position) {
+	console.log(position.coords.latitude + " " + position.coords.longitude);
+}
+ 
+ getLocation();
+ </script>
+ </body>
+</html>
