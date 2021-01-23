@@ -1,0 +1,279 @@
+body {
+    margin: 40px;
+    background-image: linear-gradient(#cc6600, black);
+    /*background-color: black;*/
+    font-family: Open Sans, sans-serif;
+    font-size: 0.8rem;
+    color: white;
+}
+
+.container {
+  display: grid;
+  grid-gap: 10px;
+  /*grid-template-columns: 20rem auto auto;*/
+  color: white;
+}
+
+.box {
+  background-color: #505050;
+  /*color: black;*/
+  border-radius: 5px;
+  padding: 20px;
+  font-size: 150%;
+  color: white;
+  box-shadow: 5px 5px 10px black;
+}
+
+.a {
+  grid-column: 1 / span 3;
+    grid-row: 1 / span 1;
+}
+
+.b {
+  grid-column: 1 / span 1;
+  grid-row: 2 / span 2;
+}
+
+.c {
+  grid-column: 2 / span 1;
+  grid-row: 2;
+}
+.e {
+  grid-column: 2 / span 1;
+  grid-row: 3;
+}
+.d {
+  grid-column: 3 / span 1;
+  grid-row: 2 / span 2;
+  height: auto;
+}
+
+.f {
+  grid-column: 1/ span 2;
+  grid-row: 2 / span 2;
+  height: auto;
+  /*width: 110%;*/
+}
+
+.g {
+  grid-column: 3 / span 1;
+  grid-row: 2 / span 2;
+  height: auto;
+  width: 40rem;
+}
+
+ul#galleryList {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+ul#galleryList li {
+    margin-bottom: 0.25rem;
+    cursor: pointer;
+}
+div.a section {
+    display: grid;		/* programmatically change this to "grid" when gallery clicked */
+    grid-gap: 5px;
+    grid-template-columns: auto;	
+}
+
+h2, h3 {
+  margin-bottom: 0px;
+  margin-top: 0px;
+}
+
+div.b section {
+    display: block;	  /* go ahead and change this to "block" when you have received data */
+}
+div.c section {
+    display: grid;    /* programmatically change this to "block" when gallery clicked */
+    grid-gap: 15px;
+    grid-template-columns: 10rem auto;
+}
+
+div.e section {
+    display: grid;  
+    grid-gap: 15px;
+    grid-template-columns: 10rem auto;
+}
+
+div.g section {
+    display: grid;    /* programmatically change this to "block" when gallery clicked */
+    grid-gap: 15px;
+    grid-template-columns: 10rem auto 10rem;
+}
+
+div.d section {
+    display: block;    /* programmatically change this to "block" when gallery clicked */
+
+}
+
+div.f {
+    display: none;    /* programmatically change this to "block" when gallery clicked */
+	margin-top 150px;
+	width: 1300px;
+}
+
+div.g {
+    display: none;    /* programmatically change this to "block" when gallery clicked */
+
+}
+
+/*My added css so far*/
+
+#companyList img {
+  width: auto;
+  height: 18px;
+  padding-left: 5px;
+}
+
+#logo img {
+  width: 185px;
+  height: auto;
+}
+
+td {
+  padding: 5px;
+}
+
+#lineChart {
+  width: 1000px;
+  height: auto;
+}
+
+#volumeChart {
+  width: auto;
+  height: auto;
+}
+
+#lineChartCon {
+  width: 1250px;
+  height: auto;
+}
+
+#volumeChartCon {
+  width: auto;
+  height: auto;
+}
+#creditMsg{
+  visibility: hidden;
+}
+
+/*#desButton, #nameButton {*/
+/*  height: 25px;*/
+/*}*/
+
+#chartView {
+  float: right;
+  margin-top: 10px;
+}
+
+#companyList{
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+/*#defualtView {*/
+/*  height: 25px;*/
+/*}*/
+
+.button {
+  background-color: #cc6600; /* Green */
+  border: none;
+  color: black;
+  /*padding: 15px 32px;*/
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  height: 25px;
+  font-weight: bold;
+  border-radius: 5px;
+  box-shadow: 2px 2px 8px black;
+}
+
+#chartView {
+  width: 160px;
+}
+
+#compFilter {
+  border-radius: 5px;
+  height: 25px;
+  width: 100%;
+  box-shadow: 2px 2px 8px black;
+  /*padding-bottom: 20px;*/
+  
+}
+
+#compForm{
+  padding: 0;
+  padding-bottom: 20px;
+  padding-top: 20px;
+}
+
+.chart {
+    background-color: white;
+    border-radius: 5px;
+    color: black;
+    padding: 15px;
+    margin-top: 15px;
+    box-shadow: 4px 4px 8px black;
+}
+
+label {
+  font-weight: bold;
+}
+
+span {
+  font-weight: normal;
+}
+
+.slidecontainer{
+	width: 100%;
+    padding-left: 35px;
+    padding-top: 20px;
+}
+
+.slider{
+	width: 95%;
+}
+
+#rangeOut span {
+	padding-left: 5px;
+}
+
+#myProgress {
+  width: 100%;
+  background-color: #ddd;
+  margin-top: 450px;
+}
+
+#myBar {
+  width: 1%;
+  height: 30px;
+  background-color: #4CAF50;
+}
+
+/*was going to add this never got around to it, its some code from w3c school*/
+/*section .tooltiptext {*/
+/*  visibility: hidden;*/
+/*  width: 120px;*/
+/*  background-color: black;*/
+/*  color: #fff;*/
+/*  text-align: center;*/
+/*  border-radius: 6px;*/
+/*  padding: 5px 0;*/
+
+  /* Position the tooltip */
+/*  position: absolute;*/
+/*  z-index: 1;*/
+/*}*/
+
+/*.tooltip:hover .tooltiptext {*/
+/*  visibility: visible;*/
+/*}*/
+
+/*.toolTip:hover {*/
+/*  background-color: red;*/
+/*}*/

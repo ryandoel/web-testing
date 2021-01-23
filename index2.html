@@ -1,0 +1,712 @@
+<html>
+ <head>
+  <title>Dashboard</title>
+  <meta name="viewport" content="width=210, initial-scale=1">
+  <link rel="stylesheet" href="css/index.css">
+ </head>
+ 
+ 
+ <body style="width:210px;height:450px">
+  <link href="tinydash.css" rel="stylesheet">
+  <script src="tinydash.js"></script>
+  <script src="puck.js"></script> 
+  <script src="chart.js"></script>  
+  
+ 
+  
+  <script>
+  
+  var headingArr = [];
+  var pitchArr = [];
+  var rollArr = [];
+  var currentTimeArr =[];
+  var xArr = [];
+  var yArr = [];
+  var zArr = [];
+  var completeArr = [];
+  // Called when we get a line of data - updates the light color
+  function onLine(line) {
+   
+    try {
+      var j = JSON.parse(line);
+      //console.log("Received JSON: ",j);
+	  //console.log("Received JSON: ",j[1]);
+	  //setting data for gages 
+	  elements.accPitch.setValue(j[3]);
+	  elements.compPitch.setValue(j[4]);
+	  elements.accRoll.setValue(j[5]);
+	  elements.compRoll.setValue(j[6]);
+	  elements.xAxis.setValue(j[7]);
+	  elements.yAxis.setValue(j[8]);
+	  elements.zAxis.setValue(j[9]);
+	  elements.yGyro.setValue(j[10]);
+	  elements.xGyro.setValue(j[11]);
+	  elements.zGyro.setValue(j[12]);
+	  elements.heading.setValue(j[13]);
+	  elements.rpmCount.setValue(j[14]);
+	  elements.RPM.setValue(j[15]);
+	  elements.RSSI.setValue(j[20]);
+	  //setting data for general data
+	  elements.batPer.setValue(j[16]);
+	  elements.time.setValue(j[2]);
+	  //console.log(testArr);
+	  // pushing data to the arrays 
+	  headingArr.push(j[13]);
+	  pitchArr.push(j[4]);
+	  rollArr.push(j[6]);
+	  currentTimeArr.push(j[2]);
+	  xArr.push(j[7]);
+	  yArr.push(j[8]);
+	  zArr.push(j[9]);
+	  completeArr.push(j);
+	  //console.log(completeArr);
+	  //setting data for graphs 
+	  elements.headGraph.setData(headingArr);
+	  elements.pitchGraph.setData(pitchArr);
+	  elements.rollGraph.setData(rollArr);
+    } catch(e) {
+      console.log("Received: ",line);
+    }
+  }
+  
+  //Arrays for the recorded data coming from the chip
+  var testArr =[];
+  var timeArr =[];
+  var recPitch = [];
+  var recAccPitch = [];
+  var recAccRoll = [];
+  var recRoll = [];
+  var recX = [];
+  var recY = [];
+  var recZ = [];
+  var recTotalG = [];
+  var recHeading = [];
+  var recRSSI = [];
+  
+  //function to take incoming stored flight data and parse to JSON and store in arrays 
+   function storeData(line) {  
+    try {
+      var j = JSON.parse(line);
+	  testArr.push(j);
+	  timeArr.push(j[2]);
+	  recPitch.push(j[4]);
+	  recAccPitch.push(j[3]);
+	  recRoll.push(j[6]);
+	  recAccRoll.push(j[5]);
+	  recX.push(j[7])
+	  recY.push(j[8])
+	  recZ.push(j[9])
+	  recTotalG.push(j[19])
+	  recHeading.push(j[13])
+	  recRSSI.push(j[20]);
+	  console.log(testArr);
+    } catch(e) {
+      console.log("Received: ",line);
+    }
+  }
+  	var beeping = false;
+	var less50 = false;
+	var greater50 = false;
+    //take in the RSSI signal
+   function storeLostData(line) {  
+    try {
+
+      var j = JSON.parse(line);
+	  elements.RSSI.setValue(j);
+	  //startout case with far from puck
+	  if(j < -50 && beeping == false){
+		//connection.write("lostDisc(0);\n");
+		//connection.write("NRF.setRSSIHandler();\n");
+		connection.write("lostDisc(1,1000);\n");
+		beeping = true;
+		less50 = true;
+		//connection.write("getRSSI();\n");
+	  }
+	  
+	  else if(j < -50 && beeping == true){
+		//will need to check if it is 
+		if(less50 == true){
+			//do nothing 
+		}
+		else if(less50 == false){
+			// puck is beeping fast and moving away, switch to slower beeper
+			connection.write("lostDisc(0);\n");
+			connection.write("lostDisc(1,1000);\n");
+			connection.write("getRSSI();\n");
+			less50 = true;
+			greater50 = false;
+		}
+	  }
+	  //startout case with close to puck
+	  else if (j > -50 && beeping == false){
+		//connection.write("lostDisc(0);\n");
+		//connection.write("NRF.setRSSIHandler();\n");
+		connection.write("lostDisc(1,200);\n");
+		beeping = true;
+		greater50 = true;
+		//connection.write("getRSSI();\n");
+	  }
+	  
+	  else if(j > -50 && beeping == true){
+		if(greater50 == true){
+			//do nothing 
+		}
+		else if(greater50 == false){
+			// puck is beeping slowly and moving closer, switch to faster beeper 
+			connection.write("lostDisc(0);\n");
+			connection.write("lostDisc(1,200);\n");
+			connection.write("getRSSI();\n");
+			less50 = false;
+			greater50 = true;
+		}
+	  }
+	  console.log(j);
+    } catch(e) {
+      console.log("Received: ",line);
+    }
+  }
+  
+  //should take out the buff and put it into its own function
+  // function to take in the flight data file from the chip 
+  function readData(){
+  console.log("in readData");
+  move();
+  connection.write("readData();\n");
+      var buf = "";
+      connection.on("data", function(d) {
+        buf += d;
+        var i = buf.indexOf("\n");
+        while (i>=0) {
+          storeData(buf.substr(0,i));
+          buf = buf.substr(i+1);
+          i = buf.indexOf("\n");
+        }
+      });
+  }
+  
+  // function to populate the live data after it comes in
+  function populate(){
+	  var buf = "";
+      connection.on("data", function(d) {
+        buf += d;
+        var i = buf.indexOf("\n");
+        while (i>=0) {
+          onLine(buf.substr(0,i));
+          buf = buf.substr(i+1);
+          i = buf.indexOf("\n");
+        }
+      });
+	 
+  }
+  
+  function lostDiscData(){
+  console.log("in lostDiscData");
+  connection.write("function getRSSI(){var signal;setInterval(function(){NRF.setRSSIHandler(function(rssi) {signal = rssi;});Bluetooth.println(signal);}, 250);};\n");
+  connection.write("getRSSI();\n");
+  //connection.write("NRF.setRSSIHandler(function(rssi){Bluetooth.println((rssi));});\n");
+      var buf = "";
+      connection.on("data", function(d) {
+        buf += d;
+        var i = buf.indexOf("\n");
+        while (i>=0) {
+          storeLostData(buf.substr(0,i));
+          buf = buf.substr(i+1);
+          i = buf.indexOf("\n");
+        }
+      });
+  }
+  
+  //function to set all the elemints back to zero
+  function zero (){
+	//zeroing out the elements  
+	  elements.accPitch.setValue(0);
+	  elements.compPitch.setValue(0);
+	  elements.accRoll.setValue(0);
+	  elements.compRoll.setValue(0);
+	  elements.xAxis.setValue(0);
+	  elements.yAxis.setValue(0);
+	  elements.zAxis.setValue(0);
+	  elements.yGyro.setValue(0);
+	  elements.xGyro.setValue(0);
+	  elements.zGyro.setValue(0);
+	  elements.heading.setValue(0);
+	  elements.rpmCount.setValue(0);
+	  elements.RPM.setValue(0);
+	  //zeroing out other elements 
+	  elements.batPer.setValue(0);
+	  elements.time.setValue(0);
+	  // zeroing out the arrays for graphs
+	  headingArr.length = 0;
+	  pitchArr.length = 0;
+	  rollArr.length = 0;
+  }
+  
+  
+var modalNum = 0;
+function move() {
+  if (modalNum == 0) {
+    i = 1;
+    var elem = document.getElementById("myBar");
+    var width = 1;
+    var id = setInterval(frame, 250);
+    function frame() {
+      if (width >= 100) {
+        clearInterval(id);
+        i = 0;
+      } else {
+        width++;
+        elem.style.width = width + "%";
+      }
+    }
+  }
+}
+
+function clickOnChart(){
+    var myCanvas = document.querySelector("#lineChart");
+    myCanvas.addEventListener('click', function (e) {
+    
+	let id = e.target.getAttribute("id");
+	console.log(id);
+	});
+  }
+  
+  //connection function to connect to puck and take back data when sent
+  /*
+  var connection;
+  function connectDevice() {
+    Puck.connect(function(c) {
+      if (!c) {
+        alert("Couldn't connect!");
+        return;
+      }
+      connection = c;
+      // remove modal window
+      elements.modal.remove();
+	  readData();
+	  //populate();
+      // Handle the data we get back, and call 'onLine'
+      // whenever we get a line
+      //var buf = "";
+      //connection.on("data", function(d) {
+		//readData();
+	  
+        //buf += d;
+        //var i = buf.indexOf("\n");
+        //while (i>=0) {
+          //onLine(buf.substr(0,i));
+          //buf = buf.substr(i+1);
+          //i = buf.indexOf("\n");
+        //}
+		
+      //});
+		
+		//time out function for reading in the last flight data from the chip
+        setTimeout(function() {
+		elements.timeOut.remove();
+		console.log("in timeout");
+		populate()
+		createLineChart(recPitch,recAccPitch,recRoll,recAccRoll,recX,recY,recZ,recTotalG,recHeading,recRSSI,timeArr);
+		clickOnChart();
+          }, 10000); //10000 = 10s
+		
+      });
+	
+  }
+  */
+
+//function
+//could feed this different query selectors so that it could draw multiple graphs    
+function createLineChart(pitch,accPitch,roll,accRoll,x,y,z,totalG,heading,RSSI,time){
+    let can = document.querySelector("#lineChart");
+
+	
+	var myChart = new Chart(can, {
+    type: 'line',
+    data: {
+        labels: time,
+        datasets: [{
+            fill: false,
+            label: "Pitch",
+            backgroundColor: 'black',
+            borderColor: 'blue',
+            data: pitch,
+        },{
+            fill: false,
+            label: "Acc Pitch",
+            backgroundColor: 'black',
+            borderColor: '#cc00cc',
+            data: accPitch,
+        },{
+            fill: false,
+            label: "Roll",
+            backgroundColor: 'black',
+            borderColor: '#cc6600',
+            data: roll,
+        },{
+            fill: false,
+            label: "Acc Roll",
+            backgroundColor: 'black',
+            borderColor: '#b3b3cc',
+            data: accRoll,
+        },{
+            fill: false,
+            label: "X-Force",
+            backgroundColor: 'black',
+            borderColor: 'red',
+            data: x,
+        },{
+            fill: false,
+            label: "Y-Force",
+            backgroundColor: 'black',
+            borderColor: 'Green',
+            data: y,
+        },{
+            fill: false,
+            label: "Z-Force",
+            backgroundColor: 'black',
+            borderColor: 'yellow',
+            data: z,
+        },{
+            fill: false,
+            label: "Total-G",
+            backgroundColor: 'black',
+            borderColor: '#33ccff',
+            data: totalG,
+        },{
+            fill: false,
+            label: "Heading",
+            backgroundColor: 'black',
+            borderColor: 'pink',
+            data: heading,
+        },{
+            fill: false,
+            label: "RSSI",
+            backgroundColor: 'black',
+            borderColor: 'lime',
+            data: RSSI,
+        }]
+    },
+    });	
+} 
+  
+  
+//function to get the geo location data
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+  } else { 
+    console.log("Geolocation is not supported by this browser.");
+  }
+}
+
+function showPosition(position) {
+	console.log(position.coords.latitude + " " + position.coords.longitude);
+  //x.innerHTML = "Latitude: " + position.coords.latitude + 
+  //"<br>Longitude: " + position.coords.longitude;
+}
+
+  
+  //function to change the display of the graphs and gauges 
+  function changeDisplay(view){
+    //document.querySelectorAll("div.td_gauge").style.display = "none";
+	var x, i;
+	x = document.querySelectorAll("div.td_gauge");
+	for (i = 0; i < x.length; i++) {
+		x[i].style.display = view;
+	}
+    //document.querySelectorAll("div.td_graph").style.display = "none";
+	var y, a;
+	y = document.querySelectorAll("div.td_graph");
+	for (a = 0; a < y.length; a++) {
+		y[a].style.display = view;
+	}
+	/*
+	if(view=="none"){
+		document.querySelector("div.f").style.display = "block";
+	}
+	else if(view=="block"){
+		document.querySelector("div.f").style.display = "none";
+	}
+	*/
+  }
+  
+  
+  //find Disc Function
+  function findDisc(on){
+	if(on == 1){
+		lostDiscData();
+	}
+	else if(on==0){
+		connection.write("lostDisc(0);\n");
+		beeping = false;
+		less50 = false;
+		greater50 = false;
+	}
+  }
+
+  //Live data function
+  var connection;
+  function live(num){
+    
+	Puck.connect(function(c) {
+      if (!c) {
+        alert("Couldn't connect!");
+        return;
+      }
+      connection = c;
+	  
+      // remove modal window
+      elements.liveData.remove();
+	  elements.fDisc.remove();
+	  elements.analyizeData.remove();
+	  //console.log("in live data");
+	  //add in case statment for code to run off a given number
+		if(num == 1){
+			elements.timeOut.remove();
+			var RSSIgage = document.querySelectorAll("div.td_gauge");
+			RSSIgage[15].style.display = "block";
+			RSSIgage[15].style.top = "110px";
+			RSSIgage[15].style.width = "390px";
+			RSSIgage[15].style.height = "450px";
+			console.log(RSSIgage[15]);
+			findDisc(1);
+		}
+		
+		else if(num == 2){
+		//document.querySelector("div.td_modal").style.display = "block";
+		 readData();
+		 createLineChart(recPitch,recAccPitch,recRoll,recAccRoll,recX,recY,recZ,recTotalG,recHeading,recRSSI,timeArr);
+		 
+		setTimeout(function() {
+		  console.log("in timeout");
+			//changeDisplay("none");
+			document.querySelector("div.f").style.display = "block";
+			elements.timeOut.remove();
+			// add the range after this
+			addRange();
+          }, 15000); //10000 = 10s
+		}
+		
+		else if(num == 3){
+		elements.timeOut.remove();
+		 changeDisplay("block");
+		 populate();
+		}
+
+      });
+	
+  }
+  
+  //function for adding the range slider based on array input
+  function addRange(){
+	var max = (testArr.length-1) * 5;
+	var box = document.querySelector("div.box");
+	var div = document.createElement('div');
+	var input = document.createElement('input');
+	var p = document.createElement('p');
+	var span = document.createElement('span');
+	var tspan = document.createElement('span');
+	var pspan = document.createElement('span');
+	var rspan = document.createElement('span');
+	var tgspan = document.createElement('span');
+	div.setAttribute("class", "slidecontainer");
+	p.setAttribute("id","rangeOut");
+	input.setAttribute("type", "range");
+	input.setAttribute("min", "0");
+	input.setAttribute("max", max);
+	input.setAttribute("value", "0");
+	input.setAttribute("step", "5");
+	input.setAttribute("class", "slider");
+	input.setAttribute("id", "myRange");
+	
+	div.appendChild(input);
+	box.appendChild(div);
+	
+	span.setAttribute("id","loopVal");
+	tspan.setAttribute("id", "time");
+	pspan.setAttribute("id", "pitch");
+	rspan.setAttribute("id", "roll");
+	tgspan.setAttribute("id", "totalg");
+	//p.appendChild(span);
+	p.appendChild(tspan);
+	p.appendChild(pspan);
+	p.appendChild(rspan);
+	p.appendChild(tgspan);
+	box.appendChild(p);
+  //console.log(modal);
+	outputRange();
+  }
+  
+  //function output value of Range
+  function outputRange() {
+	var slider = document.getElementById("myRange");
+	var output = document.getElementById("loopVal");
+	var timeoutput = document.getElementById("time");
+	var pitchout = document.getElementById("pitch");
+	var rollout = document.getElementById("roll");
+	var totalgout = document.getElementById("totalg");
+	//output.innerHTML = slider.value;
+
+	
+	slider.oninput = function() {
+		var loopCount = this.value;
+		//output.innerHTML = "lC:" + loopCount;
+		
+		var aC = (loopCount/5);
+		var time = testArr[aC][2];
+		var pitch = testArr[aC][4];
+		var roll = testArr[aC][6];
+		var totalg = testArr[aC][19];
+		timeoutput.innerHTML = "Time: " + time;
+		pitchout.innerHTML = "Pitch: " + pitch;
+		rollout.innerHTML = "Roll: " + roll;
+		totalgout.innerHTML = "Total G: " + totalg;
+	}
+  }
+  
+  // Set up the controls we see on the screen    
+  var elements = {
+    //heading : TD.label({x:10,y:10,width:190,height:50,label:"My Dashboard"}),
+	//Toggel buttons for different modes 
+	zero : TD.button({x:10,y:10,width:190,height:90,label:"Zero Out",onchange:function() {
+      //connection.write("LED1.write("+v+");\n");
+	  zero();
+	  //getLocation();
+    }}),
+	changeDisplay : TD.toggle({x:210,y:10,width:190,height:90,label:"Change Display",value:0,onchange:function(el,v) {
+      //connection.write("LED1.write("+v+");\n");
+	  if(v==1){
+	  changeDisplay("none");
+	  }
+	  else if (v==0){
+	  changeDisplay("block");
+	  }
+    }}),
+	//getData : TD.toggle({x:410,y:10,width:190,height:90,label:"getData JSON",value:0,onchange:function(el,v) {
+      //connection.write("getData("+v+",1);\n");
+    //}}),
+	getJSONon : TD.button({x:410,y:10,width:190,height:90,label:"Live Data",onchange:function(){
+      //connection.write("require('Storage').eraseAll();\n");
+	  connection.write("getData(1,0,1);\n")
+    }}),
+	getJSONoff : TD.button({x:610,y:10,width:190,height:90,label:"JSON off",onchange:function(){
+	  connection.write("getData(0,1);\n");
+	  //could have a call to write a graph for the new data after it has been taken in -> uncomment below for functionality 
+	  //createLineChart(pitchArr,rollArr,xArr,yArr,zArr,headingArr,currentTimeArr);
+    }}),
+	//getCSV : TD.toggle({x:210,y:110,width:190,height:90,label:"getData CSV",value:0,onchange:function(el,v) {
+      //connection.write("require('Storage').eraseAll();\n");
+	  //connection.write("getData("+v+",0);\n");
+    //}}),
+	throwDisc : TD.button({x:810,y:10,width:190,height:90,label:"Throw Disc",onchange:function(){
+      connection.write("require('Storage').eraseAll();\n");
+	  connection.write("getData(1,1,0);\n");
+	  //need to add the lost disc beeping after a set time
+	  connection.write("lostDisc(1,1000,30000);\n");
+	  setTimeout(function() {
+		console.log("log started");
+		connection.close();
+	  }, 1000);
+    }}),
+	getCSVoff : TD.button({x:1010,y:10,width:190,height:90,label:"CSV off",onchange:function(){
+	  connection.write("getData(0,0);\n")
+    }}),
+	readData : TD.toggle({x:1210,y:10,width:190,height:90,label:"read file",value:0,onchange:function(el,v) {
+      connection.write("readData("+v+");\n");
+    }}),
+	lostDisc : TD.toggle({x:1410,y:10,width:190,height:90,label:"Find Disc",value:0,onchange:function(el,v) {
+		findDisc(v);
+      //connection.write("function getRSSI(){var signal;setInterval(function(){NRF.setRSSIHandler(function(rssi) {signal = rssi;});Bluetooth.println(signal);}, 1000);};\n");
+	  //connection.write("getRSSI();\n");
+	  //connection.write("lostDisc(0);\n");
+    }}),
+	//general readouts
+    batPer : TD.gauge({x:10,y:110,width:190,height:220,label:"Battery",value:0,min:0,max:100}),
+	time : TD.gauge({x:210,y:110,width:190,height:220,label:"Time",value:0,min:0,max:2000}),
+	//Pitch and Roll from Acc and Comp filters
+	accPitch : TD.gauge({x:10,y:340,width:190,height:220,label:"Acc Pitch",value:0,min:-100,max:100}),
+	compPitch : TD.gauge({x:210,y:340,width:190,height:220,label:"comp Pitch",value:0,min:-100,max:100}),
+	accRoll : TD.gauge({x:10,y:570,width:190,height:220,label:"Acc Roll",value:0,min:-100,max:100}),
+	compRoll : TD.gauge({x:210,y:570,width:190,height:220,label:"comp Roll",value:0,min:-100,max:100}),
+	//G-force from acc
+	xAxis : TD.gauge({x:410,y:110,width:190,height:220,label:"X-Force",value:0,min:-17,max:17}),
+	yAxis : TD.gauge({x:410,y:340,width:190,height:220,label:"Y-Force",value:0,min:-17,max:17}),
+	zAxis : TD.gauge({x:410,y:570,width:190,height:220,label:"Z-Force",value:0,min:-17,max:17}),
+	//gyro in degrees 
+	yGyro : TD.gauge({x:610,y:110,width:190,height:220,label:"Y-Gyro",value:0,min:-720,max:720}),
+	xGyro : TD.gauge({x:610,y:340,width:190,height:220,label:"X-Gyro",value:0,min:-720,max:720}),
+	zGyro : TD.gauge({x:610,y:570,width:190,height:220,label:"Z-Gyro",value:0,min:-720,max:720}),
+	//RPM Stuff 
+	heading : TD.gauge({x:810,y:110,width:190,height:220,label:"Heading",value:0,min:-720,max:720}),
+	rpmCount : TD.gauge({x:810,y:340,width:190,height:220,label:"Rotation Count",value:0,min:0,max:100}),
+	RPM : TD.gauge({x:810,y:570,width:190,height:220,label:"RPM",value:0,min:0,max:2000}),
+	//RSSI 
+	RSSI : TD.gauge({x:10,y:800,width:190,height:220,label:"RSSI",value:0,min:-100,max:0}),
+	//graphs
+	headGraph: TD.graph({x:1010,y:110,width:400,height:220,label:"heading Graph"}),
+	pitchGraph: TD.graph({x:1010,y:340,width:400,height:220,label:"pitch Graph"}),
+	rollGraph: TD.graph({x:1010,y:570,width:400,height:220,label:"roll Graph"}),
+    
+	//modals
+	timeOut: TD.modal({x:10,y:10,width:1500,height:800,label:"loading flight data..."}),
+	fDisc: TD.modal({x:10,y:10,width:500,height:800,label:"Find Disc",onchange:function(){
+		live(1);
+	}}),
+	analyizeData: TD.modal({x:520,y:10,width:500,height:800,label:"Last Throw",onchange:function(){
+		live(2);
+	}}),
+	liveData: TD.modal({x:1030,y:10,width:500,height:800,label:"Live Data",onchange:function(){
+		live(3);
+	}})
+	//modal: TD.modal({x:10,y:10,width:1500,height:800,label:"Click to connect",onchange:connectDevice})
+  }
+  
+  for (var i in elements)
+    document.body.appendChild(elements[i]);
+  	
+	//a timeout function for the changing of display after elements load 
+	setTimeout(function() {
+		changeDisplay("none");
+		//modal.setAttribute("style", "display:none;");
+    }, 100); //10000 = 10s
+
+  
+  //function addLoadBar(){
+  var modal = document.querySelector("div.td_modal");
+  var div1 = document.createElement('div');
+  var div2 = document.createElement('div');
+  div1.setAttribute("id", "myProgress");
+  div2.setAttribute("id", "myBar");
+  div1.appendChild(div2);
+  modal.appendChild(div1);
+  //console.log(modal);
+  //}
+
+
+  
+  </script>
+  
+
+
+  
+<div class="box f">
+    <h2>Chart</h2>
+    <div id="lineChartCon" class="chart">
+    <canvas id="lineChart">
+      
+    </canvas>
+    </div>
+	<!--
+	<div class="slidecontainer">
+		<input type="range" min="0" max="1180" value="50" step="20" class="slider" id="myRange">
+		<p>Value: <span id="demo"></span></p>
+	</div>
+	-->
+  </div>
+  
+  
+ 
+  
+ 
+ </body>
+</html>
