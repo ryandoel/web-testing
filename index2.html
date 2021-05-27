@@ -602,11 +602,11 @@ function showPosition(position) {
       connection.write("require('Storage').eraseAll();\n");
 	  connection.write("getData(1,1,0);\n");
 	  //need to add the lost disc beeping after a set time
-	  connection.write("lostDisc(1,1000,30000);\n");
-	  setTimeout(function() {
-		console.log("log started");
-		connection.close();
-	  }, 1000);
+	 // connection.write("lostDisc(1,1000,30000);\n");
+	  //setTimeout(function() {
+		//console.log("log started");
+		//connection.close();
+	  //}, 1000);
     }}),
 	getCSVoff : TD.button({x:1010,y:10,width:190,height:90,label:"CSV off",onchange:function(){
 	  connection.write("getData(0,0);\n")
