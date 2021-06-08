@@ -16,7 +16,6 @@
   
   <script>
   
-  var sound = new Audio("sound.mp3");
   var headingArr = [];
   var pitchArr = [];
   var rollArr = [];
@@ -588,7 +587,7 @@ function showPosition(position) {
     //}}),
 	getJSONon : TD.button({x:410,y:10,width:190,height:90,label:"Live Data",onchange:function(){
       //connection.write("require('Storage').eraseAll();\n");
-	  sound.play()
+	  
 	  connection.write("getData(1,0,1);\n")
     }}),
 	getJSONoff : TD.button({x:610,y:10,width:190,height:90,label:"JSON off",onchange:function(){
