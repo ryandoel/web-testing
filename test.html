@@ -23,8 +23,14 @@ function showPosition(position) {
   x.innerHTML = "Latitude: " + position.coords.latitude + 
   "<br>Longitude: " + position.coords.longitude;
 }
+	 
+
+var sound = new Audio("sound.mp3");
+	
+
  
  getLocation();
+ sound.play();
  </script>
  </body>
 </html>
